@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""THE WORLD, THURSDAY 19 NOVEMBER 2026.
+"""THE WORLD, THURSDAY 19 NOVEMBER 2026 — v2.
 
-One-image summary of the day's world news: a dense newspaper front page
-drawn entirely in code. Pure Python 3.13 standard library, deterministic,
-no network, no randomness, no external files.
+Denser newspaper front page: 52 verified stories of the day (13 anchor
+cards with picture strips, a world map with numbered story sites, a UTC
+timeline strip, a by-region index, and 39 briefs). Pure Python 3.13
+standard library, deterministic, no network, no randomness, no external
+files. All 52 stories are real events of 19 November 2026 (or first
+reported that day), cross-checked against the day's news digests.
 """
 import math
 import os
@@ -247,151 +250,204 @@ def png_bytes():
             + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
             + chunk(b"IEND", b""))
 
-# ---------------------------------------------------------------------- scenes
-def draw_flag_us(x, y, w, h):
-    rect(x, y, w, h, WHITE)
-    for i in range(7):
-        if i % 2 == 0:
-            rect(x, y + i * h // 7, w, h // 7 + 1, RED)
-    rect(x, y, w * 2 // 5, h * 4 // 7, BLUE)
-    for r in range(4):
-        for c in range(5):
-            set_px(x + 3 + c * 4, y + 3 + r * 4, WHITE)
+# ------------------------------------------------------------- mini scenes
+# Each draws a small picture strip inside (x, y, w, h); h is 36 for the
+# four anchor rows and 56 for the row-5 Van Gogh card.
 
 
-def draw_flag_cn(x, y, w, h):
-    rect(x, y, w, h, RED)
-    star(x + w // 5, y + h // 3, 6, 3, YELLOW)
-    star(x + w // 2, y + h // 5, 3, 1, YELLOW)
-    star(x + w * 3 // 5, y + h // 3, 3, 1, YELLOW)
-    star(x + w * 3 // 5, y + h // 2, 3, 1, YELLOW)
-    star(x + w // 2, y + h * 2 // 3, 3, 1, YELLOW)
-
-
-def draw_flag_ru(x, y, w, h):
-    rect(x, y, w, h // 3 + 1, WHITE)
-    rect(x, y + h // 3, w, h // 3 + 1, BLUE)
-    rect(x, y + 2 * h // 3, w, h - 2 * h // 3, RED)
-
-
-def draw_figure(x, y, c, flip):
-    """Simple standing figure, y = feet. flip: facing right (+1) / left (-1)."""
-    circle(x, y - 34, 5, c)
-    line(x, y - 28, x, y - 8, c, 3)
-    line(x, y - 8, x - 6, y, c, 3)
-    line(x, y - 8, x + 6, y, c, 3)
-    line(x, y - 26, x - 8, y - 16, c, 2)
-    line(x, y - 26, x + 8 * flip, y - 18, c, 2)
-
-
-def scene_shenzhen(x, y, w, h):
+def mini_shenzhen(x, y, w, h):
     rect(x, y, w, h, SKY)
-    circle(x + w - 52, y + 24, 16, (240, 214, 120))
-    # skyline
-    heights = [62, 96, 74, 118, 84, 104, 66, 92]
-    bw = w // 8
-    base = y + h - 34
+    circle(x + w - 26, y + 9, 6, (240, 214, 120))
+    base = y + h - 3
+    heights = [12, 20, 15, 26, 18, 22, 13]
+    bw = w // 7
     for i, bh in enumerate(heights):
         bx = x + i * bw
-        rect(bx + 2, base - bh, bw - 4, bh, (52, 66, 92))
-        for wy in range(base - bh + 8, base - 6, 14):
-            for wx in range(bx + 7, bx + bw - 7, 11):
-                rect(wx, wy, 4, 5, YELLOW)
-    rect(x, base, w, 34, (88, 96, 88))
-    # three flags on poles
-    fx = x + w // 2 - 66
-    for i, fn in enumerate((draw_flag_us, draw_flag_cn, draw_flag_ru)):
-        px = fx + i * 48
-        vline(px, y + 52, h - 52 - 34, INK)
-        fn(px + 1, y + 52, 42, 26)
-    # handshake figures
-    draw_figure(x + w // 2 - 34, base, INK, 1)
-    draw_figure(x + w // 2 + 34, base, (120, 30, 30), -1)
-    line(x + w // 2 - 26, base - 18, x + w // 2 + 26, base - 18, INK, 2)
+        rect(bx + 1, base - bh, bw - 2, bh, (52, 66, 92))
+    rect(x, base, w, 3, (88, 96, 88))
+    fx = x + w // 2 - 36
+    for i in range(3):
+        px = fx + i * 26
+        vline(px, y + 4, base - (y + 4), INK)
+        if i == 0:  # US
+            rect(px + 1, y + 4, 18, 8, WHITE)
+            for s in range(0, 8, 4):
+                rect(px + 1, y + 4 + s, 18, 2, RED)
+            rect(px + 1, y + 4, 8, 5, BLUE)
+        elif i == 1:  # CN
+            rect(px + 1, y + 4, 18, 8, RED)
+            star(px + 6, y + 8, 3, 1, YELLOW)
+        else:  # RU
+            rect(px + 1, y + 4, 18, 8, WHITE)
+            rect(px + 1, y + 6, 18, 3, BLUE)
+            rect(px + 1, y + 9, 18, 3, RED)
 
 
-def scene_kerch(x, y, w, h):
+def mini_kerch(x, y, w, h):
     rect(x, y, w, h, NIGHT)
-    for sx, sy in ((30, 18), (90, 34), (170, 14), (250, 40), (330, 20),
-                   (410, 30), (60, 60), (300, 62), (450, 52), (200, 48)):
+    for sx, sy in ((20, 8), (60, 14), (120, 6), (200, 12), (260, 8),
+                   (300, 16), (90, 20), (180, 18)):
         set_px(x + sx, y + sy, WHITE)
-        set_px(x + sx + 1, y + sy, WHITE)
-    circle(x + w - 60, y + 26, 15, (238, 232, 200))
-    circle(x + w - 66, y + 22, 3, (200, 192, 160))
-    # sea
-    rect(x, y + h - 52, w, 52, SEA)
-    # bridge deck and arch
-    deck_y = y + h - 66
-    rect(x, deck_y, w, 8, (120, 118, 110))
-    for i in range(5):
-        px = x + 40 + i * 96
-        rect(px, deck_y + 8, 6, h - 66 - 8, (96, 94, 88))
-    for t in range(0, 181, 4):
-        ax = x + w // 2 + int(190 * math.cos(math.radians(t)))
-        ay = deck_y - int(52 * math.sin(math.radians(t)))
-        rect(ax - 2, ay - 2, 5, 5, (150, 148, 140))
-    # explosion flash over the bridge
-    ex, ey = x + w // 2 + 40, deck_y - 14
-    star(ex, ey, 30, 12, ORANGE)
-    star(ex, ey, 18, 8, YELLOW)
-    circle(ex, ey, 8, WHITE)
-    circle(ex - 22, ey - 18, 10, (90, 88, 84))
-    circle(ex + 26, ey - 24, 8, (90, 88, 84))
-    # moon reflection and sparks on the water
-    for i in range(6):
-        rect(x + w - 78 + i * 6, y + h - 44 + i * 5, 26 - i * 3, 2,
-             (200, 196, 170))
-    for sx, sy in ((ex - 30, deck_y + 22), (ex + 44, deck_y + 30),
-                   (ex + 8, deck_y + 16)):
-        set_px(sx, sy, ORANGE)
+    circle(x + w - 26, y + 9, 5, (238, 232, 200))
+    rect(x, y + h - 9, w, 9, SEA)
+    deck_y = y + h - 13
+    rect(x, deck_y, w, 3, (120, 118, 110))
+    for t in range(0, 181, 15):
+        ax = x + w // 2 + int(70 * math.cos(math.radians(t)))
+        ay = deck_y - int(14 * math.sin(math.radians(t)))
+        rect(ax - 1, ay - 1, 3, 3, (150, 148, 140))
+    ex, ey = x + w // 2 + 30, deck_y - 6
+    star(ex, ey, 9, 4, ORANGE)
+    star(ex, ey, 5, 2, YELLOW)
+    circle(ex - 18, ey - 8, 4, (90, 88, 84))
 
 
-def scene_anthropic(x, y, w, h):
+def mini_anthropic(x, y, w, h):
     rect(x, y, w, h, WHITE)
-    for gy in range(y + 24, y + h - 30, 24):
-        hline(x + 8, gy, w - 16, LIGHT)
-    # rising bars
-    bars = [26, 40, 34, 58, 52, 76, 92]
-    bw = (w - 40) // 7
-    base = y + h - 52
+    bars = [8, 13, 10, 18, 24]
+    bw = (w - 30) // 5
+    base = y + h - 4
     for i, bh in enumerate(bars):
-        rect(x + 20 + i * bw, base - bh, bw - 8, bh, BLUE)
-    # rising line with arrow
-    pts = [(x + 24, base - 26), (x + 70, base - 44), (x + 116, base - 36),
-           (x + 162, base - 62), (x + 208, base - 58), (x + 254, base - 88),
-           (x + 296, base - 100)]
-    for i in range(len(pts) - 1):
-        line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], RED, 3)
-    line(pts[-1][0], pts[-1][1], pts[-1][0] - 12, pts[-1][1] + 2, RED, 3)
-    line(pts[-1][0], pts[-1][1], pts[-1][0] - 4, pts[-1][1] + 12, RED, 3)
-    # big number
-    draw_text_centered(x + w // 2, y + 8, "$81.3BN", 3, RED)
-    draw_text_centered(x + w // 2, y + h - 24, "BIGGEST IPO EVER", 1, GREY)
+        rect(x + 15 + i * bw, base - bh, bw - 4, bh, BLUE)
+    line(x + 18, base - 8, x + w - 18, base - 26, RED, 2)
 
 
-def scene_gaza(x, y, w, h):
+def mini_gaza(x, y, w, h):
     rect(x, y, w, h, SAND)
-    circle(x + w - 44, y + 22, 14, (240, 200, 110))
-    ellipse(x + 70, y + h - 12, 70, 10, SAND2)
-    ellipse(x + w - 70, y + h - 10, 70, 10, SAND2)
-    # ceasefire line: dashed yellow line down the middle
-    for dy in range(0, h - 20, 16):
-        rect(x + w // 2 - 1, y + 8 + dy, 3, 10, YELLOW)
-    draw_text(x + w // 2 + 8, y + 12, "YELLOW", 1, (120, 90, 20))
-    draw_text(x + w // 2 + 8, y + 22, "LINE", 1, (120, 90, 20))
+    circle(x + w - 30, y + 8, 6, (240, 200, 110))
+    for dy in range(0, h, 9):
+        rect(x + w // 2 - 1, y + 2 + dy, 2, 5, YELLOW)
+    rect(x + 18, y + h - 12, 36, 8, (92, 96, 66))
+    rect(x + 26, y + h - 18, 18, 7, (92, 96, 66))
+    line(x + 44, y + h - 15, x + 62, y + h - 18, (92, 96, 66), 3)
+    rect(x + 16, y + h - 4, 40, 3, INK)
+    rect(x + w - 56, y + h - 12, 36, 8, (110, 104, 70))
+    rect(x + w - 48, y + h - 18, 18, 7, (110, 104, 70))
+    line(x + w - 56, y + h - 15, x + w - 74, y + h - 18, (110, 104, 70), 3)
+    rect(x + w - 58, y + h - 4, 40, 3, INK)
 
-    def tank(tx, ty, c):
-        rect(tx, ty, 64, 16, c)
-        rect(tx + 14, ty - 10, 34, 12, c)
-        line(tx + 48, ty - 4, tx + 78, ty - 10, c, 4)
-        for wx in range(5):
-            circle(tx + 8 + wx * 13, ty + 18, 5, INK)
-        rect(tx - 2, ty + 14, 68, 4, INK)
 
-    tank(x + 26, y + h - 62, (92, 96, 66))
-    tank(x + w - 96, y + h - 44, (110, 104, 70))
-    circle(x + 60, y + 30, 7, (120, 118, 110))
-    circle(x + 70, y + 22, 5, (120, 118, 110))
+def mini_tanker(x, y, w, h):
+    rect(x, y, w, h, (24, 68, 118))
+    rect(x, y + h - 14, w, 14, (16, 44, 84))
+    rect(x + 40, y + h - 16, 160, 10, (28, 28, 34))
+    rect(x + 40, y + h - 19, 160, 3, (70, 70, 78))
+    rect(x + 168, y + h - 30, 26, 12, WHITE)
+    rect(x + 52, y + h - 26, 10, 8, (200, 60, 40))
+    circle(x + 57, y + h - 30, 4, (120, 118, 112))
+    circle(x + 62, y + h - 33, 3, (120, 118, 112))
+    star(x + 130, y + h - 20, 7, 3, ORANGE)
+    star(x + 130, y + h - 20, 4, 2, YELLOW)
+
+
+def mini_gta(x, y, w, h):
+    rect(x, y, w, h, NIGHT)
+    base = y + h - 3
+    heights = [16, 24, 12, 28, 20, 26, 14]
+    bw = w // 7
+    for i, bh in enumerate(heights):
+        bx = x + i * bw
+        rect(bx + 1, base - bh, bw - 2, bh, (34, 40, 66))
+        for wy in range(base - bh + 4, base - 3, 7):
+            set_px(bx + 6, wy, YELLOW)
+            set_px(bx + bw - 8, wy + 3, YELLOW)
+    draw_text(x + w - 50, y + 4, "99", 2, YELLOW)
+
+
+def mini_voyager(x, y, w, h):
+    rect(x, y, w, h, BLACK)
+    for sx, sy in ((20, 8), (70, 16), (130, 6), (200, 12), (260, 8),
+                   (300, 18), (150, 22), (240, 24)):
+        set_px(x + sx, y + sy, WHITE)
+    px, py = x + w // 2, y + 16
+    rect(px - 8, py - 3, 16, 7, (200, 170, 80))
+    line(px + 8, py, px + 20, py - 6, (200, 170, 80), 2)
+    circle(px + 23, py - 8, 4, (200, 170, 80))
+    for dx, dy in ((30, -12), (36, -14), (42, -12)):
+        set_px(px + dx, py + dy, WHITE)
+    circle(x + 22, y + h - 8, 6, BLUE)
+    circle(x + 20, y + h - 10, 2, GREEN)
+
+
+def mini_icj(x, y, w, h):
+    rect(x, y, w, h, (24, 48, 96))
+    cx = x + w // 2
+    poly([(cx - 42, y + 13), (cx + 42, y + 13), (cx, y + 3)], (220, 220, 210))
+    for i in range(4):
+        colx = cx - 36 + i * 20
+        rect(colx, y + 14, 6, h - 20, (220, 220, 210))
+    rect(cx - 48, y + h - 6, 96, 4, (220, 220, 210))
+
+
+def mini_nvidia(x, y, w, h):
+    rect(x, y, w, h, (16, 52, 28))
+    cx, cy = x + 60, y + h // 2
+    rect(cx - 11, cy - 10, 22, 20, (118, 200, 90))
+    rect(cx - 6, cy - 5, 12, 10, (60, 140, 50))
+    for p in range(4):
+        rect(cx - 15, cy - 8 + p * 5, 4, 3, (200, 180, 80))
+        rect(cx + 11, cy - 8 + p * 5, 4, 3, (200, 180, 80))
+    line(x + 110, y + h - 8, x + w - 30, y + 8, YELLOW, 2)
+    line(x + w - 30, y + 8, x + w - 44, y + 8, YELLOW, 2)
+    line(x + w - 30, y + 8, x + w - 30, y + 20, YELLOW, 2)
+
+
+def mini_odesa(x, y, w, h):
+    rect(x, y, w, h, NIGHT)
+    base = y + h - 3
+    heights = [18, 26, 14, 22, 16]
+    bw = w // 5
+    for i, bh in enumerate(heights):
+        bx = x + i * bw
+        rect(bx + 2, base - bh, bw - 4, bh, (52, 52, 60))
+        for wy in range(base - bh + 5, base - 3, 8):
+            set_px(bx + 8, wy, YELLOW)
+    ex, ey = x + w // 2, y + 10
+    star(ex, ey, 10, 4, ORANGE)
+    star(ex, ey, 6, 2, YELLOW)
+    circle(ex - 26, ey - 4, 5, (90, 88, 84))
+    circle(ex + 28, ey - 6, 4, (90, 88, 84))
+
+
+def mini_berlin(x, y, w, h):
+    rect(x, y, w, h, (210, 208, 198))
+    cx = x + w // 2
+    rect(cx - 34, y + 6, 68, 5, (90, 88, 84))
+    rect(cx - 34, y + 11, 7, h - 14, (90, 88, 84))
+    rect(cx + 27, y + 11, 7, h - 14, (90, 88, 84))
+    for i, cols in enumerate((
+            ((0, 0, 0), (200, 0, 0), (220, 180, 0)),
+            ((0, 60, 160), (255, 255, 255), (220, 0, 0)),
+            ((0, 90, 180), (240, 200, 0), (0, 90, 180)))):
+        fx = x + 20 + i * 26
+        for j, c in enumerate(cols):
+            rect(fx, y + h - 12 + j * 3, 20, 3, c)
+
+
+def mini_exam(x, y, w, h):
+    rect(x, y, w, h, WHITE)
+    for r in range(3):
+        for c in range(5):
+            dx = x + 24 + c * 34
+            dy = y + 10 + r * 9
+            circle(dx, dy - 3, 2, INK)
+            rect(dx - 5, dy, 10, 4, (90, 90, 96))
+    circle(x + w - 24, y + 11, 8, WHITE)
+    frame(x + w - 32, y + 3, 16, 16, INK)
+    line(x + w - 24, y + 11, x + w - 24, y + 5, INK, 1)
+    line(x + w - 24, y + 11, x + w - 19, y + 13, INK, 1)
+
+
+def mini_vangogh(x, y, w, h):
+    rect(x, y, w, h, (36, 68, 140))
+    circle(x + w - 42, y + 10, 7, YELLOW)
+    for dx, dy in ((30, 22), (50, 16), (70, 20), (90, 14), (110, 20),
+                   (130, 15)):
+        set_px(x + dx, y + dy, YELLOW)
+        set_px(x + dx + 1, y + dy, YELLOW)
+    rect(x, y + h - 9, w, 9, (90, 120, 60))
+    poly([(x + 30, y + h - 9), (x + 38, y + h - 9), (x + 34, y + 12)],
+         (20, 50, 30))
 
 
 # world map panel ------------------------------------------------------------
@@ -422,19 +478,17 @@ CONTINENTS = {
            (132, -11), (126, -14), (122, -17)],
 }
 
-MARKERS = [
-    ("SHENZHEN", 114.0, 22.5, 6, -12),
-    ("KERCH", 36.4, 45.3, -40, 8),
-    ("GAZA", 34.5, 31.5, -46, 8),
-    ("GULF", 51.0, 26.0, -34, 2),
-    ("MYANMAR", 96.0, 21.0, -56, 12),
-    ("WASHINGTON", -77.0, 38.9, -62, -12),
-    ("LONDON", -0.1, 51.5, 6, -12),
-    ("NEW DELHI", 77.2, 28.6, 8, 10),
+# Numbered story sites on the map; the key lives in the index panel.
+MAP_NUMBERS = [
+    ("1", 114.0, 22.5),   # Shenzhen
+    ("2", 36.4, 45.3),    # Kerch
+    ("3", 34.5, 31.5),    # Gaza
+    ("4", 51.0, 26.0),    # Gulf / Hormuz
+    ("5", 127.0, 37.5),   # Seoul
 ]
 
 
-def scene_map(x, y, w, h):
+def scene_map_numbered(x, y, w, h):
     rect(x, y, w, h, OCEAN)
     for lonlat in CONTINENTS.values():
         pts = []
@@ -443,67 +497,139 @@ def scene_map(x, y, w, h):
             py = y + int((75 - lat) / 135.0 * h)
             pts.append((px, py))
         poly(pts, GREEN)
-    for name, lon, lat, dx, dy in MARKERS:
+    for num, lon, lat in MAP_NUMBERS:
         mx = x + int((lon + 180) / 360.0 * w)
         my = y + int((75 - lat) / 135.0 * h)
         circle(mx, my, 4, RED)
         circle(mx, my, 2, WHITE)
-        lx = mx + dx
-        ly = my + dy
-        lx = max(x + 2, min(x + w - 2 - text_width(name, 1), lx))
-        ly = max(y + 2, min(y + h - 9, ly))
-        draw_text(lx, ly, name, 1, INK)
+        draw_text(mx + 6, my - 3, num, 1, WHITE)
 
 
 # ---------------------------------------------------------------------- layout
-def anchor_panel(x, y, w, h, kicker, headline, sub, scene_fn):
+def anchor_card(x, y, w, h, kicker, headline, sub, scene_fn, scene_h):
     frame(x, y, w, h, INK)
-    scene_h = 158
     scene_fn(x + 1, y + 1, w - 2, scene_h)
     hline(x + 1, y + scene_h + 1, w - 2, INK)
-    ty = y + scene_h + 10
+    ty = y + scene_h + 6
     draw_text(x + 10, ty, kicker, 1, RED)
     draw_text(x + 10, ty + 12, headline, 2, INK)
     draw_text(x + 10, ty + 30, sub, 1, GREY)
 
 
+def draw_timeline():
+    line_y = 100
+    hline(16, line_y, 992, INK)
+    for hh, lab in ((0, "00"), (6, "06"), (12, "12"), (18, "18"), (24, "24")):
+        tx = 16 + int(hh / 24 * 992)
+        vline(tx, line_y - 4, 9, INK)
+        draw_text_centered(tx, line_y + 6, lab, 1, GREY)
+    events = [(0, "SUNEUNG"), (2, "KERCH"), (3, "APEC"), (12, "BERLIN"),
+              (19, "FED MINUTES")]
+    for hh, lab in events:
+        ex = 16 + int(hh / 24 * 992)
+        circle(ex, line_y, 4, RED)
+        circle(ex, line_y, 2, WHITE)
+        lx = ex - text_width(lab, 1) // 2
+        lx = max(16, min(1008 - text_width(lab, 1), lx))
+        draw_text(lx, 89, lab, 1, INK)
+    draw_text(1008 - text_width("UTC", 1), 89, "UTC", 1, GREY)
+
+
+def index_panel(x, y, w, h):
+    frame(x, y, w, h, INK)
+    draw_text(x + 10, y + 8, "BY REGION: 52 STORIES", 1, RED)
+    rows = [("MIDDLE EAST", 9), ("ASIA-PACIFIC", 10), ("EUROPE", 9),
+            ("AMERICAS", 7), ("AFRICA", 6), ("MARKETS + TECH", 11)]
+    for i, (name, n) in enumerate(rows):
+        ty = y + 22 + i * 11
+        draw_text(x + 10, ty, name, 1, INK)
+        draw_text(x + w - 10 - text_width(str(n), 1), ty, str(n), 1, INK)
+    hline(x + 10, y + 92, w - 20, LIGHT)
+    draw_text(x + 10, y + 98, "MAP: 1 SHENZHEN 2 KERCH", 1, GREY)
+    draw_text(x + 10, y + 108, "3 GAZA 4 GULF 5 SEOUL", 1, GREY)
+
+
+# 13 anchor cards: (kicker, headline, caption, scene)
+ANCHORS = [
+    ("APEC SUMMIT", "TRILATERAL IN SHENZHEN", "TRUMP, XI AND PUTIN MEET",
+     mini_shenzhen),
+    ("CRIMEA", "KERCH BRIDGE HIT AGAIN", "THIRD NIGHT RUNNING", mini_kerch),
+    ("MARKETS", "ANTHROPIC'S RECORD IPO", "$81.3BN, BIGGEST EVER",
+     mini_anthropic),
+    ("MIDDLE EAST", "GAZA LINE CROSSED", "TANKS PAST YELLOW LINE",
+     mini_gaza),
+    ("GULF WAR", "HORMUZ TANKER STRUCK", "11 HURT, ONE MISSING",
+     mini_tanker),
+    ("GAMING", "GTA VI LAUNCHES", "99 ON METACRITIC, RECORDS FALL",
+     mini_gta),
+    ("SPACE", "VOYAGER 1, ONE LIGHT-DAY", "25.9BN KM FROM EARTH",
+     mini_voyager),
+    ("THE HAGUE", "ICJ TO RULE ON MYANMAR", "ROHINGYA GENOCIDE CASE",
+     mini_icj),
+    ("TECH", "NVIDIA'S $115.8BN QUARTER", "HUANG COMEBACK REJECTED",
+     mini_nvidia),
+    ("UKRAINE", "ODESA DRONE STRIKE", "FOUR KILLED, CENTRE HIT",
+     mini_odesa),
+    ("COALITION OF THE WILLING", "BERLIN COALITION MEETS",
+     "20+ LEADERS, US ENVOYS", mini_berlin),
+    ("SOUTH KOREA", "SUNEUNG EXAM DAY", "550,000 STUDENTS SIT TEST",
+     mini_exam),
+    ("ART", "VAN GOGH SELLS $190.4M", "RECORD AFTER NAZI-ERA ROW",
+     mini_vangogh),
+]
+
+# 39 briefs, column-major (3 columns x 13 rows).
 BRIEFS = [
-    ("ICJ TO RULE ON MYANMAR", "HISTORIC ROHINGYA GENOCIDE VERDICT DUE"),
-    ("JEFFRIES SET FOR SPEAKER", "FIRST BLACK SPEAKER OF THE US HOUSE"),
-    ("VAN GOGH SELLS FOR $190.4M", "RECORD PRICE AFTER NAZI-ERA ROW"),
-    ("CYCLONE AKVAN NEARS INDIA", "STORM TO CROSS BETWEEN MACHILIPATNAM AND PURI"),
-    ("US AND VENEZUELA RESTORE MILITARY TIES", "TRAINING AND INTELLIGENCE TIES RESUME"),
-    ("NORTH KOREA ENRICHMENT EXPANDS", "IAEA REPORTS URANIUM GROWTH"),
-    ("CANADA SANCTIONS SETTLERS", "MEASURES OVER WEST BANK EXPANSION"),
-    ("NVIDIA HALTS H-SERIES TO CHINA", "ACTING CEO ALSO PROMISES EARLIER PAY"),
+    # column 1: Middle East + markets
+    ("GULF WAR WIDENS", "IRAN HITS BASES; FIGHTING SPREADS"),
+    ("SAUDI INTERCEPTS MISSILES", "TWO HOUTHI MISSILES DOWNED OVER RIYADH"),
+    ("64 CHILDREN KILLED IN YEMEN", "UNICEF TOLL SINCE 3 SEPTEMBER"),
+    ("GAZA RAINS DISPLACE 46,000", "SHELTERS FLOOD, TENTS HELD UP"),
+    ("KNESSET PICKS NEW SPEAKER", "MATAN KAHANA WINS 66 VOTES"),
+    ("US SANCTIONS HEZBOLLAH-LINKED NETWORK",
+     "THREE ENTITIES AND THREE PEOPLE LISTED"),
+    ("UAE ECONOMY TO GROW 7.3 PC", "IMF FORECAST FOR NEXT YEAR"),
+    ("OIL PRICES FALL", "BRENT $92.6 AS US STOCKS RISE"),
     ("FED MINUTES POINT TO MORE HIKES", "MOST OFFICIALS EXPECT FURTHER RISES"),
-    ("VOYAGER 1 HITS ONE LIGHT-DAY", "PROBE AT RECORD DISTANCE, 50 YEARS ON"),
-    ("GTA VI ROLLS OUT WORLDWIDE", "GAMERS ENTER VICE CITY AT LAUNCH"),
-    ("EU PROPOSES 45BN EURO UKRAINE LOAN", "REPAID AFTER RUSSIA PAYS REPARATIONS"),
-    ("GULF WAR WIDENS", "IRAN HITS BASES; TANKER STRUCK, CREW SAFE"),
-    ("OIL PRICES FALL", "SUPPLY GAINS OUTWEIGH MIDDLE EAST FEARS"),
-    ("MICROSOFT EYES BYTEDANCE AI DEAL", "TALKS TO SELL AI SERVICES TO BYTEDANCE"),
-    ("RIYADH DANGER PASSED", "THREE SOUTHERN CITIES CLEARED AFTER ALERTS"),
-    ("LIU YUNPING MAKES HISTORY", "FIRST TAIWANESE AMERICAN CAUCUS CHAIR"),
-    ("SUDAN DEATH TOLL CONFIRMED", "UN COUNTS OVER 2,230 CIVILIAN DEATHS"),
+    ("EU PROPOSES 45BN EURO UKRAINE LOAN",
+     "REPAID AFTER RUSSIA PAYS REPARATIONS"),
+    ("MELENCHON COULD WIN IN FRANCE", "JUSTICE MINISTER WARNS ON HARD LEFT"),
+    ("UK-EU SUMMIT SET FOR 20 NOV", "BREXIT RESET TALKS IN BRUSSELS"),
+    ("EU-INDONESIA TRADE DEALS APPROVED", "COUNCIL SIGNS OFF AGREEMENTS"),
+    # column 2: Asia + Europe + tech
+    ("CYCLONE AKVAN NEARS INDIA",
+     "STORM TO CROSS BETWEEN MACHILIPATNAM AND PURI"),
+    ("NORTH KOREA ENRICHMENT EXPANDS", "IAEA REPORTS URANIUM GROWTH"),
     ("INDIA-JAPAN 2+2 IN TOKYO", "DEFENCE AND FOREIGN MINISTERS MEET"),
     ("SINDHU BACK IN TOP FIVE", "INDIAN STAR RETURNS TO WORLD TOP FIVE"),
-    ("ISLAM TO TOP WORLD FAITHS BY 2035", "PEW REPORT PROJECTS LARGEST RELIGION"),
     ("DELHI SCHOOLS REOPEN", "OFFLINE CLASSES RESUME AS CURBS LIFT"),
-    ("RUSSIAN HELD OVER PALANTIR SPYING", "ARRESTED FOR SPYING ON US DEFENCE FIRM"),
+    ("BANGLADESH GARMENT PROTESTS", "THIRD WEEK, TEAR GAS FIRED"),
+    ("US-PHILIPPINES EYE $2BN LOAN", "FINANCING PACKAGE PURSUED VIA FMF"),
+    ("LIU YUNPING MAKES HISTORY", "FIRST TAIWANESE AMERICAN CAUCUS CHAIR"),
+    ("NVIDIA HALTS H-SERIES TO CHINA", "ACTING CEO ALSO PROMISES EARLIER PAY"),
+    ("MICROSOFT EYES BYTEDANCE AI DEAL",
+     "TALKS TO SELL AI SERVICES TO BYTEDANCE"),
+    ("SENATORS WARN ON AI CYBER THREAT", "AI ATTACKS OUTPACING DEFENCES"),
+    ("RUSSIAN HELD OVER PALANTIR SPYING",
+     "ARRESTED FOR SPYING ON US DEFENCE FIRM"),
+    ("CARNEY ADJUSTS CHINA TIES", "CANADA SEEKS RIGHT DEAL WITH US"),
+    # column 3: Americas + Africa + world
+    ("JEFFRIES SET FOR SPEAKER", "NOMINATED WITH 251 VOTES"),
+    ("US AND VENEZUELA RESTORE MILITARY TIES",
+     "TRAINING AND INTELLIGENCE TIES RESUME"),
+    ("CANADA SANCTIONS SETTLERS", "MEASURES OVER WEST BANK EXPANSION"),
+    ("PANAMA ARREST IN JOURNALIST ATTACK",
+     "SECOND SUSPECT HELD OVER HOME ATTACK"),
+    ("SUDAN DEATH TOLL CONFIRMED", "UN COUNTS OVER 2,230 CIVILIAN DEATHS"),
+    ("LIBYA DRUG HAUL", "COCAINE AND MILLIONS OF PILLS SEIZED"),
+    ("ETHIOPIA-ERITREA TROOPS MASS", "CLASH FEARS RISE NEAR BADME"),
+    ("SOWETO FLOODS KILL ONE", "CHILD MISSING AFTER HEAVY RAIN"),
+    ("MALAWI WATER 74% TAINTED", "GOLD MINING POLLUTES SUPPLY"),
+    ("RUTO ADDRESSES THE NATION", "KENYAN LEADER SEEKS SECOND TERM"),
     ("MCDONALD'S ABUSE REPORT", "STAFF SAY THEY WAITED FOR GIRLS TO TURN 18"),
     ("WORLD COPD DAY", "EARLY DIAGNOSIS IN FOCUS"),
-    ("SENATORS WARN ON AI CYBER THREAT", "AI ATTACKS OUTPACING DEFENCES"),
-    ("EU-INDONESIA TRADE DEALS APPROVED", "COUNCIL SIGNS OFF AGREEMENTS"),
-    ("LIBYA DRUG HAUL", "COCAINE AND MILLIONS OF PILLS SEIZED"),
-    ("PANAMA ARREST IN JOURNALIST ATTACK", "SECOND SUSPECT HELD OVER HOME ATTACK"),
-    ("PARAGUAY BANK DEADLINE EXTENDED", "UENO GUARANTEE EXTENDED TO 2 DECEMBER"),
-    ("US SANCTIONS HEZBOLLAH-LINKED NETWORK", "THREE ENTITIES AND THREE PEOPLE LISTED"),
-    ("US-PHILIPPINES EYE $2BN LOAN", "FINANCING PACKAGE PURSUED VIA FMF"),
-    ("MELENCHON COULD WIN IN FRANCE", "JUSTICE MINISTER WARNS ON HARD LEFT"),
-    ("CARNEY ADJUSTS CHINA TIES", "CANADA SEEKS RIGHT DEAL WITH US"),
-    ("64 CHILDREN KILLED IN YEMEN", "UNICEF TOLL SINCE 3 SEPTEMBER"),
-    ("YEMEN MISSILE THREAT TO RIYADH", "COALITION REPORTS THREAT; FRAGMENTS FOUND"),
+    ("ISLAM TO TOP WORLD FAITHS BY 2035",
+     "PEW REPORT PROJECTS LARGEST RELIGION"),
 ]
 
 
@@ -513,34 +639,38 @@ def draw_page():
     draw_text_centered(W // 2, 12, "THE WORLD", 6, INK)
     draw_text_centered(W // 2, 60, "THURSDAY 19 NOVEMBER 2026", 2, INK)
     rect(16, 84, 992, 3, INK)
-    # row 1: two big anchors
-    anchor_panel(16, 94, 488, 240, "APEC SUMMIT", "TRILATERAL IN SHENZHEN",
-                 "TRUMP, XI AND PUTIN MEET AT APEC", scene_shenzhen)
-    anchor_panel(520, 94, 488, 240, "CRIMEA", "KERCH BRIDGE HIT AGAIN",
-                 "THIRD NIGHT RUNNING, TRAFFIC CLOSED", scene_kerch)
-    # row 2: two anchors + world map
-    anchor_panel(16, 342, 320, 240, "MARKETS", "ANTHROPIC'S RECORD IPO",
-                 "$81.3BN RAISED, VALUED ABOVE $1.4TN", scene_anthropic)
-    anchor_panel(352, 342, 320, 240, "MIDDLE EAST", "GAZA LINE CROSSED",
-                 "TANKS ADVANCE PAST CEASEFIRE LINE", scene_gaza)
-    anchor_panel(688, 342, 320, 240, "WHERE IT HAPPENED", "THE WORLD MAP",
-                 "EIGHT STORY SITES MARKED IN RED", scene_map)
+    # UTC timeline strip
+    draw_timeline()
+    # anchor grid: rows 1-4 (h 84), row 5 (h 124)
+    cols = (16, 352, 688)
+    rows = (118, 207, 296, 385)
+    for r in range(4):
+        for c in range(3):
+            kicker, headline, sub, scene_fn = ANCHORS[r * 3 + c]
+            anchor_card(cols[c], rows[r], 320, 84, kicker, headline, sub,
+                        scene_fn, 36)
+    kicker, headline, sub, scene_fn = ANCHORS[12]
+    anchor_card(16, 474, 320, 124, kicker, headline, sub, scene_fn, 56)
+    frame(352, 474, 320, 124, INK)
+    scene_map_numbered(353, 475, 318, 122)
+    index_panel(688, 474, 320, 124)
     # briefs header
-    draw_text_centered(W // 2, 592, "THE DAY IN BRIEF", 2, INK)
-    rect(16, 614, 992, 2, INK)
-    # briefs: 3 columns x 12 rows
+    draw_text_centered(W // 2, 606, "THE DAY IN BRIEF - 39 MORE STORIES", 2,
+                       INK)
+    rect(16, 626, 992, 2, INK)
+    # briefs: 3 columns x 13 rows
     for i, (head, cap) in enumerate(BRIEFS):
-        col = i // 12
-        row = i % 12
+        col = i // 13
+        row = i % 13
         bx = 16 + col * 336
-        by = 622 + row * 30
+        by = 632 + row * 27
         draw_text(bx, by, head, 1, INK)
         draw_text(bx, by + 11, cap, 1, GREY)
-        if row < 11:
+        if row < 12:
             hline(bx, by + 24, 320, LIGHT)
     # footer
-    rect(16, 984, 992, 2, INK)
-    draw_text_centered(W // 2, 994, "40 STORIES, ONE DAY", 2, RED)
+    rect(16, 988, 992, 2, INK)
+    draw_text_centered(W // 2, 996, "52 STORIES, ONE DAY", 2, RED)
 
 
 def main():
